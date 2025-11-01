@@ -26,13 +26,12 @@ jobs:
             ${{ runner.os }}-maven-
 
       -   name: Run tests
-          run: ./mvnw clean verify -s .mvn/settings.xml
+          run: ./mvnw clean verify
           env:
             CONFIG_SERVER_PASS: ${{ secrets.CONFIG_SERVER_PASS }}
             CONFIG_SERVER_URL: ${{ secrets.CONFIG_SERVER_URL }}
             CONFIG_SERVER_USER: ${{ secrets.CONFIG_SERVER_USER }}
             SPRING_PROFILES_ACTIVE: test
-            GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
 
 
 
@@ -76,7 +75,5 @@ jobs:
         with:
           push: true
           tags: lyolek.synology.me:5555/nasa/poebot:latest
-          secrets: | 
-            github_token=${{ secrets.MY_GITHUB_TOKEN }}
           cache-from: type=gha,scope=maven
           cache-to: type=gha,scope=maven,mode=max
