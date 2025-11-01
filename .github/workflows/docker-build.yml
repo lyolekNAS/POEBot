@@ -1,0 +1,82 @@
+name: Build and Push Docker Image
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      -   uses: actions/checkout@v4
+
+      -   name: Set up JDK
+          uses: actions/setup-java@v4
+          with:
+            distribution: temurin
+            java-version: 21
+
+      - name: Cache Maven dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      -   name: Run tests
+          run: ./mvnw clean verify -s .mvn/settings.xml
+          env:
+            CONFIG_SERVER_PASS: ${{ secrets.CONFIG_SERVER_PASS }}
+            CONFIG_SERVER_URL: ${{ secrets.CONFIG_SERVER_URL }}
+            CONFIG_SERVER_USER: ${{ secrets.CONFIG_SERVER_USER }}
+            SPRING_PROFILES_ACTIVE: test
+            GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
+
+
+
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK for Maven in build job
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Cache Maven dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: Set up QEMU (для multi-arch, якщо треба)
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to private registry
+        uses: docker/login-action@v3
+        with:
+          registry: lyolek.synology.me:5555
+          username: ${{ secrets.REGISTRY_USER }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          push: true
+          tags: lyolek.synology.me:5555/nasa/poebot:latest
+          secrets: | 
+            github_token=${{ secrets.MY_GITHUB_TOKEN }}
+          cache-from: type=gha,scope=maven
+          cache-to: type=gha,scope=maven,mode=max
