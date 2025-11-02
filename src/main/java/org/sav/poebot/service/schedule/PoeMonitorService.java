@@ -8,9 +8,6 @@ import org.jsoup.nodes.*;
 import org.jsoup.select.Elements;
 import org.sav.poebot.model.*;
 import org.sav.poebot.service.TelegramNotifier;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -174,9 +171,9 @@ public class PoeMonitorService {
 
 	private String getStatus(String cls) {
 		return switch (cls) {
-			case "light_2" -> "відключення";
-			case "light_3" -> "відключення можливе";
-			default -> "світло є";
+			case "light_2" -> "\uD83D\uDD34";
+			case "light_3" -> "\uD83D\uDFE1";
+			default -> "\uD83D\uDFE2";
 		};
 	}
 }
