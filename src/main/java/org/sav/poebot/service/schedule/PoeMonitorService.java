@@ -68,17 +68,9 @@ public class PoeMonitorService {
 				.method(org.jsoup.Connection.Method.POST)
 				.timeout(15_000)
 				.post();
+		log.info("poe document:{}", doc);
 
-		// 1. Загальна інформація
-		String infoText = doc.select("div.gpvinfodetail").text();
-		Pattern p = Pattern.compile("з (\\d{2}:\\d{2}) по (\\d{2}:\\d{2}).+?обсязі (\\d+(?:\\.\\d+)?)");
-		Matcher m = p.matcher(infoText);
-		List<InfoBlock> info = new ArrayList<>();
-		while (m.find()) {
-			info.add(new InfoBlock(m.group(1), m.group(2), Double.parseDouble(m.group(3))));
-		}
-
-		// 2. Таблиця
+		// Таблиця
 		List<QueueData> schedule = new ArrayList<>();
 		Elements rows = doc.select("table.turnoff-scheduleui-table tbody tr");
 		QueueData currentQueue = null;
@@ -103,7 +95,7 @@ public class PoeMonitorService {
 			}
 		}
 
-		return new ScheduleResponse(date, info, schedule);
+		return new ScheduleResponse(date, schedule);
 	}
 
 	private List<String> extractLights(List<Element> elements) {

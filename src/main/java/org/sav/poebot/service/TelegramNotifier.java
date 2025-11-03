@@ -1,8 +1,9 @@
 package org.sav.poebot.service;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.sav.poebot.config.ProfileChecker;
 import org.sav.poebot.config.TelegramProperties;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
@@ -10,14 +11,12 @@ import java.util.Map;
 
 
 @Component
+@RequiredArgsConstructor
+@Slf4j
 public class TelegramNotifier {
-	private static final Logger log = LoggerFactory.getLogger(TelegramNotifier.class);
 	private final RestTemplate restTemplate = new RestTemplate();
 	private final TelegramProperties props;
-
-	public TelegramNotifier(TelegramProperties props) {
-		this.props = props;
-	}
+	private final ProfileChecker profile;
 
 	public void sendMessage(String queueKey, String message) {
 		Long chatId = props.getChannels().get(queueKey);
@@ -35,7 +34,9 @@ public class TelegramNotifier {
 		);
 
 		try {
-			restTemplate.postForObject(url, payload, String.class);
+			if(profile.isProd()) {
+				restTemplate.postForObject(url, payload, String.class);
+			}
 			log.info("📨 Відправлено в канал {}: {}", queueKey, message.split("\n")[0]);
 		} catch (Exception e) {
 			log.error("Помилка надсилання в Telegram: {}", e.getMessage());
