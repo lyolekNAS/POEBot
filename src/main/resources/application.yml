@@ -1,24 +1,24 @@
 spring:
     application:
         name: POEBot
-    config:
-        import:
-            - configserver:${config.server.url}
-            - vault://
-    cloud:
-        config:
-            profile: ${spring.profiles.active}
-            label: main
-            username: ${CONFIG_SERVER_USER}
-            password: ${CONFIG_SERVER_PASS}
-        vault:
-            uri: https://lyolek.synology.me:8200/
-            scheme: https
-            authentication: approle
-            app-role:
-                role-id: ${POEBOT_VAULT_ROLE_ID}
-                secret-id: ${POEBOT_VAULT_SECRET_ID}
-            kv:
-                enabled: true
-                backend: secret
-                default-context: ${spring.application.name}
+#    config:
+#        import:
+#            - configserver:${config.server.url}
+#            - vault://
+#    cloud:
+#        config:
+#            profile: ${spring.profiles.active}
+#            label: main
+#            username: ${CONFIG_SERVER_USER}
+#            password: ${CONFIG_SERVER_PASS}
+#        vault:
+#            uri: https://lyolek.synology.me:8200/
+#            scheme: https
+#            authentication: approle
+#            app-role:
+#                role-id: ${POEBOT_VAULT_ROLE_ID}
+#                secret-id: ${POEBOT_VAULT_SECRET_ID}
+#            kv:
+#                enabled: true
+#                backend: secret
+#                default-context: ${spring.application.name}
