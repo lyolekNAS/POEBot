@@ -197,10 +197,11 @@ public class PoeMonitorService {
 			isRangeChanged = hours.get(h - 1).isChanged() || isRangeChanged;
 			if (nextStatus == null || !nextStatus.equals(currentStatus)) {
 				int endMin = h * 30;
-				sb.append(isRangeChanged ? ">>>" : "")
+				sb.append(isRangeChanged ? "<b><u>" : "")
 						.append(formatTime(startMin))
 						.append(" - ")
 						.append(formatTime(endMin))
+						.append(isRangeChanged ? "</u></b>" : "")
 						.append(" - ")
 						.append(currentStatus)
 						.append("\n");
