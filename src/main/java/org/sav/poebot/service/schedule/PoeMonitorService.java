@@ -156,6 +156,9 @@ public class PoeMonitorService {
 				String key = q.queue() + "." + sq.subqueue();
 				List<String> newHours = sq.hours();
 				List<String> oldHours = findOldHours(oldData, q.queue(), sq.subqueue());
+				newHours = newHours.stream()
+						.map(h -> oldHours.contains(h) ? h : ">>>" + h)
+						.toList();
 
 				if (!newHours.equals(oldHours)) {
 					telegram.sendMessage(key, buildMessage(q.queue(), sq.subqueue(), newHours));
