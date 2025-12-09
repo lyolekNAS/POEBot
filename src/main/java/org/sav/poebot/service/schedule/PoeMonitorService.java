@@ -7,6 +7,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.sav.poebot.model.Hour;
 import org.sav.poebot.model.QueueData;
 import org.sav.poebot.model.ScheduleResponse;
 import org.sav.poebot.model.SubQueue;
@@ -21,6 +22,7 @@ import java.nio.file.Files;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.IntStream;
 
 @Slf4j
 @Service
@@ -154,11 +156,15 @@ public class PoeMonitorService {
 		for (QueueData q : newData.schedule()) {
 			for (SubQueue sq : q.subqueues()) {
 				String key = q.queue() + "." + sq.subqueue();
+
 				List<String> newHours = sq.hours();
 				List<String> oldHours = findOldHours(oldData, q.queue(), sq.subqueue());
+				List<Hour> hours = IntStream.range(0, sq.hours().size())
+						.mapToObj(i -> new Hour(newHours.get(i), !newHours.get(i).equals(oldHours.get(i))))
+						.toList();
 
 				if (!newHours.equals(oldHours)) {
-					telegram.sendMessage(key, buildMessage(q.queue(), sq.subqueue(), newHours));
+					telegram.sendMessage(key, buildMessage(q.queue(), sq.subqueue(), hours));
 				}
 			}
 		}
@@ -178,18 +184,21 @@ public class PoeMonitorService {
 	/**
 	 * Формує повідомлення в Telegram.
 	 */
-	private String buildMessage(int queue, int subqueue, List<String> hours) {
+	private String buildMessage(int queue, int subqueue, List<Hour> hours) {
 		StringBuilder sb = new StringBuilder("Черга ")
 				.append(queue).append(".").append(subqueue).append("\n");
 
-		String currentStatus = getStatus(hours.get(0));
+		String currentStatus = getStatus(hours.getFirst().state());
 		int startMin = 0;
 
+		boolean isRangeChanged = false;
 		for (int h = 1; h <= hours.size(); h++) {
-			String nextStatus = (h < hours.size()) ? getStatus(hours.get(h)) : null;
+			String nextStatus = (h < hours.size()) ? getStatus(hours.get(h).state()) : null;
+			isRangeChanged = hours.get(h - 1).isChanged() || isRangeChanged;
 			if (nextStatus == null || !nextStatus.equals(currentStatus)) {
 				int endMin = h * 30;
-				sb.append(formatTime(startMin))
+				sb.append(isRangeChanged ? ">>>" : "")
+						.append(formatTime(startMin))
 						.append(" - ")
 						.append(formatTime(endMin))
 						.append(" - ")
@@ -200,6 +209,7 @@ public class PoeMonitorService {
 					currentStatus = nextStatus;
 					startMin = endMin;
 				}
+				isRangeChanged = false;
 			}
 		}
 		return sb.toString().trim();
