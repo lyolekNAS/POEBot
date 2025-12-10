@@ -160,7 +160,7 @@ public class PoeMonitorService {
 				List<String> newHours = sq.hours();
 				List<String> oldHours = findOldHours(oldData, q.queue(), sq.subqueue());
 				List<Hour> hours = IntStream.range(0, sq.hours().size())
-						.mapToObj(i -> new Hour(newHours.get(i), !newHours.get(i).equals(oldHours.get(i))))
+						.mapToObj(i -> new Hour(newHours.get(i), oldHours.isEmpty() || !newHours.get(i).equals(oldHours.get(i))))
 						.toList();
 
 				if (!newHours.equals(oldHours)) {
