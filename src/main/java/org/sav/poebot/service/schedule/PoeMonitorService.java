@@ -193,14 +193,16 @@ public class PoeMonitorService {
 		float cntLight1 = 0;
 		float cntLight2 = 0;
 		float cntLight3 = 0;
+		float cntCurrentLight = 0;
 
 		boolean isRangeChanged = false;
 		for (int h = 1; h <= hours.size(); h++) {
 			switch (hours.get(h - 1).state()){
-				case "light_1" -> cntLight1 = cntLight1 + 0.5f;
-				case "light_2" -> cntLight2 = cntLight2 + 0.5f;
-				default -> cntLight3 = cntLight3 + 0.5f;
+				case "light_1" -> cntLight1 += 0.5f;
+				case "light_2" -> cntLight2 += 0.5f;
+				default -> cntLight3 += 0.5f;
 			}
+			cntCurrentLight += 0.5f;
 			String nextStatus = (h < hours.size()) ? getStatus(hours.get(h).state()) : null;
 			isRangeChanged = hours.get(h - 1).isChanged() || isRangeChanged;
 			if (nextStatus == null || !nextStatus.equals(currentStatus)) {
@@ -209,9 +211,10 @@ public class PoeMonitorService {
 						.append(formatTime(startMin))
 						.append(" - ")
 						.append(formatTime(endMin))
-						.append(isRangeChanged ? "</u></b>" : "")
 						.append(" - ")
 						.append(currentStatus)
+						.append(" (").append(cntCurrentLight).append(")")
+						.append(isRangeChanged ? "</u></b>" : "")
 						.append("\n");
 
 				if (nextStatus != null) {
@@ -219,6 +222,7 @@ public class PoeMonitorService {
 					startMin = endMin;
 				}
 				isRangeChanged = false;
+				cntCurrentLight = 0;
 			}
 		}
 		sb.append("————————\n");
