@@ -66,7 +66,7 @@ jobs:
       - name: Log in to private registry
         uses: docker/login-action@v3
         with:
-          registry: lyolek.synology.me:5555
+          registry: ${{ secrets.REGISTRY_URL }}
           username: ${{ secrets.REGISTRY_USER }}
           password: ${{ secrets.REGISTRY_PASSWORD }}
 
@@ -74,6 +74,6 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           push: true
-          tags: lyolek.synology.me:5555/nasa/poebot:latest
+          tags: ${{ secrets.REGISTRY_URL }}/nasa/poebot:latest
           cache-from: type=gha,scope=maven
           cache-to: type=gha,scope=maven,mode=max
