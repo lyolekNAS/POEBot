@@ -1,0 +1,19 @@
+name: OpenClaw Gatekeeper Review
+
+on:
+    push:
+        branches:
+            - prod-*
+
+jobs:
+    notify-ai:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Trigger OpenClaw Review
+              run: |
+                  curl -X POST ${{ vars.OPENCLAW_HOOK_URL }}/code-review \
+                    -H "Content-Type: application/json" \
+                    -H "Authorization: Bearer ${{ secrets.CODE_REVIEW_WEBHOOK_SECRET }}" \
+                    -d '{
+                      "commitUrl": "${{ github.event.head_commit.url }}"
+                    }'

@@ -90,7 +90,10 @@ public class PoeMonitorService {
 			return null;
 		}
 
-		Elements rows = firstBlock.select("table.turnoff-scheduleui-table tbody tr");
+		Elements rows = firstBlock.select("table.gpv-table tbody tr");
+		if (rows.isEmpty()) {
+			rows = firstBlock.select("table.turnoff-scheduleui-table tbody tr");
+		}
 		if (rows.isEmpty()) {
 			log.warn("⚠️ Порожня таблиця графіка");
 			return null;
@@ -103,7 +106,11 @@ public class PoeMonitorService {
 	/**
 	 * Парсить HTML-рядки таблиці в структуру графіка.
 	 */
-	private List<QueueData> parseSchedule(Elements rows) {
+	List<QueueData> parseSchedule(Elements rows) {
+		if (!rows.isEmpty() && rows.first().selectFirst("td.gpv-q") != null) {
+			return parseGpvSchedule(rows);
+		}
+
 		List<QueueData> schedule = new ArrayList<>();
 		QueueData currentQueue = null;
 
@@ -133,6 +140,40 @@ public class PoeMonitorService {
 		}
 
 		return schedule;
+	}
+
+	private List<QueueData> parseGpvSchedule(Elements rows) {
+		Map<Integer, List<SubQueue>> queues = new LinkedHashMap<>();
+
+		for (Element row : rows) {
+			Element queueCell = row.selectFirst("td.gpv-q");
+			if (queueCell == null) continue;
+
+			String[] parts = queueCell.text().trim().split("\\.");
+			if (parts.length != 2) {
+				throw new IllegalArgumentException("Некоректний номер черги: " + queueCell.text());
+			}
+
+			int queue = Integer.parseInt(parts[0]);
+			int subqueue = Integer.parseInt(parts[1]);
+			List<String> hours = row.select("td.gpv-c").stream()
+					.map(this::extractGpvLight)
+					.toList();
+
+			queues.computeIfAbsent(queue, ignored -> new ArrayList<>())
+					.add(new SubQueue(subqueue, hours));
+		}
+
+		return queues.entrySet().stream()
+				.map(entry -> new QueueData(entry.getKey(), entry.getValue()))
+				.toList();
+	}
+
+	private String extractGpvLight(Element cell) {
+		if (cell.hasClass("gpv-s1")) return "light_1";
+		if (cell.hasClass("gpv-s2")) return "light_2";
+		if (cell.hasClass("gpv-s3")) return "light_3";
+		return "light_0";
 	}
 
 	/**
